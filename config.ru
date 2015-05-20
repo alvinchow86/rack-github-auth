@@ -4,7 +4,7 @@ require './github_auth'
 
 module Precious
   class App < Sinatra::Base
-    # use GitHubAuthApp
+    use GitHubAuthApp
   end
 end
 
