@@ -10,7 +10,7 @@ require 'sinatra/base'
 GITHUB_CLIENT_ID =  ENV['GITHUB_CLIENT_ID']
 GITHUB_SECRET = ENV['GITHUB_SECRET']
 AUTHORIZED_USERS = ENV['AUTHORIZED_USERS']
-APP_SECRET = ENV['APP_SECRET']
+SECRET_KEY = ENV['SECRET_KEY']
 
 authorized_users = AUTHORIZED_USERS ? AUTHORIZED_USERS.split(',') : []
 
@@ -19,7 +19,7 @@ class GitHubAuthApp < Sinatra::Base
   # Ideally figure out a way for the calling app to set this..
   use Rack::Session::Cookie,
                            :expire_after => 86400, # In seconds
-                           :secret => APP_SECRET
+                           :secret => SECRET_KEY
 
   use OmniAuth::Builder do
     provider :github, GITHUB_CLIENT_ID, GITHUB_SECRET, scope: "user:email"
