@@ -27,6 +27,10 @@ class GitHubAuthApp < Sinatra::Base
 
   AUTH_URL = '/auth/github'
 
+  def initialize(app, params={})
+    super(app)
+  end
+
   module Helpers
     def authorized?
       session.has_key? :user
@@ -72,6 +76,14 @@ class GitHubAuthApp < Sinatra::Base
         "nickname" => nickname,
         "email" => email
       }
+
+      # Store gollum author
+      # TODO figure out how to make this a configurable callback function
+      session['gollum.author'] = {
+        :name => nickname,
+        :email => email
+      }
+
       login_user(user)
       redirect to('/')
     end
