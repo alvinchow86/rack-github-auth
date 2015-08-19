@@ -3,18 +3,20 @@ require 'rack'
 
 require 'omniauth'
 require 'omniauth-github'
+require 'octokit'
 
 require 'sinatra/base'
 
 
-GITHUB_CLIENT_ID =  ENV['GITHUB_CLIENT_ID']
-GITHUB_SECRET = ENV['GITHUB_SECRET']
-AUTHORIZED_USERS = ENV['AUTHORIZED_USERS']
-SECRET_KEY = ENV['SECRET_KEY']
-
-authorized_users = AUTHORIZED_USERS ? AUTHORIZED_USERS.split(',') : []
-
 class GitHubAuthApp < Sinatra::Base
+
+  GITHUB_CLIENT_ID =  ENV['GITHUB_CLIENT_ID']
+  GITHUB_SECRET = ENV['GITHUB_SECRET']
+  AUTHORIZED_USERS = ENV['AUTHORIZED_USERS']
+  AUTHORIZED_ORG = ENV['AUTHORIZED_ORG']
+  SECRET_KEY = ENV['SECRET_KEY']
+
+  authorized_users = AUTHORIZED_USERS ? AUTHORIZED_USERS.split(',') : []
 
   # Ideally figure out a way for the calling app to set this..
   use Rack::Session::Cookie,
@@ -22,7 +24,7 @@ class GitHubAuthApp < Sinatra::Base
                            :secret => SECRET_KEY
 
   use OmniAuth::Builder do
-    provider :github, GITHUB_CLIENT_ID, GITHUB_SECRET, scope: "user:email"
+    provider :github, GITHUB_CLIENT_ID, GITHUB_SECRET, scope: "user:email,read:org"
   end
 
   AUTH_URL = '/auth/github'
@@ -66,21 +68,34 @@ class GitHubAuthApp < Sinatra::Base
   end
 
   get '/auth/github/callback' do
-    user_info = request.env['omniauth.auth']['info']
+    auth_hash =request.env['omniauth.auth']
 
-    nickname = user_info['nickname']
+    user_info = auth_hash['info']
+    credentials = auth_hash['credentials']
+
+    # Construct Github API client, for checking organization
+    client = Octokit::Client.new(:access_token => credentials['token'])
+
+    username = user_info['nickname']
     email = user_info['email']
 
-    if AUTHORIZED_USERS.include? nickname
+    authorized = false
+    if authorized_users.include? username
+      authorized = true;
+    elsif AUTHORIZED_ORG && client.org_member?(AUTHORIZED_ORG, client.user.login)
+      authorized = true
+    end
+
+    if authorized
       user = {
-        "nickname" => nickname,
+        "username" => username,
         "email" => email
       }
 
       # Store gollum author
       # TODO figure out how to make this a configurable callback function
       session['gollum.author'] = {
-        :name => nickname,
+        :name => username,
         :email => email
       }
 
