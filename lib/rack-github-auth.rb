@@ -68,7 +68,7 @@ class GitHubAuthApp < Sinatra::Base
   end
 
   get '/auth/github/callback' do
-    auth_hash =request.env['omniauth.auth']
+    auth_hash = request.env['omniauth.auth']
 
     user_info = auth_hash['info']
     credentials = auth_hash['credentials']
