@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'rack-github-auth'
-  s.version     = '1.0.0'
-  s.date        = '2015-05-19'
+  s.version     = '1.0.1'
+  s.date        = '2015-08-18'
   s.summary     = "Rack Github Auth"
   s.description = "Rack middleware for Github authentication"
   s.authors     = ["Alvin Chow"]
